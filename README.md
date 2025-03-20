@@ -19,5 +19,5 @@ SIMPLEXITY is a new upcoming mp3 player ready to change the game
 
 - <strong>Import Folders and any mp3 files</strong>
 - <strong>Endless playback ready to play your songs on loop</strong>
-- <strong>Dark amoled themes making it vision safe *more themes coming soon* eyes</strong>
-- <strong>Easy navigation to click and play</strong>
+- <strong>Dark amoled themes making it vision safe (*more themes coming soon*)</strong>
+- <strong>Easy navigation just click and play</strong>
