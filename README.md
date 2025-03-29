@@ -5,7 +5,7 @@
 
 
  <p align="center">
-SIMPLEXITY is a new upcoming mp3 player ready to change the game
+SIMPLEXITY is a open source new upcoming mp3 player ready to change the game
 
 <h2> <div align="center"><b> Modified MP3 Client for Windows/mac </b></div> </h2>
 
