@@ -1,0 +1,216 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import pygame
+import os
+from tkinter import ttk
+from mutagen.mp3 import MP3
+from PIL import Image, ImageTk
+import io
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+import webbrowser
+import time
+
+
+# Set up Spotify API authentication
+SPOTIPY_CLIENT_ID = "YOUR_SPOTIPY_CLIENT_ID"
+SPOTIPY_CLIENT_SECRET = "YOUR_SPOTIPY_CLIENT_SECRET"
+SPOTIPY_REDIRECT_URI = "http://localhost:8888/callback"
+
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
+                                                client_secret=SPOTIPY_CLIENT_SECRET,
+                                                redirect_uri=SPOTIPY_REDIRECT_URI,
+                                                scope=["user-library-read", "playlist-read-private", "playlist-read-collaborative", "user-read-playback-state", "user-modify-playback-state"]))
+
+
+class MusicPlayer:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Simplexity Player")
+        self.root.geometry("800x600")
+        self.root.config(bg="#2F2F2F")
+        
+        # Initialize pygame mixer for music
+        pygame.mixer.init()
+
+        # Variables
+        self.is_playing = False
+        self.current_song = None
+        self.song_length = 0
+        self.song_list = []  # Song queue
+        self.current_index = 0
+        self.folder_name = ""
+
+        # Create the GUI elements
+        self.create_widgets()
+
+    def create_widgets(self):
+        """Create the GUI elements"""
+        # Sidebar frame (Left side)
+        self.sidebar_frame = tk.Frame(self.root, bg="#333333", width=200, height=600)
+        self.sidebar_frame.pack(side="left", fill="y")
+
+        # Logo Label
+        self.logo_label = tk.Label(self.sidebar_frame, text="Simplexity Player", font=("Arial", 18, "bold"), bg="#333333", fg="white")
+        self.logo_label.pack(pady=20)
+
+        # Import MP3 button
+        self.import_button = tk.Button(self.sidebar_frame, text="Import MP3", font=("Arial", 12, "bold"), bg="#5B8CC2", fg="black", command=self.import_files, relief="solid", width=18, height=2)
+        self.import_button.pack(pady=10)
+
+        # Playlist section
+        self.playlist_label = tk.Label(self.sidebar_frame, text="Your Library", font=("Arial", 14), bg="#333333", fg="white")
+        self.playlist_label.pack(pady=10)
+
+        # Playlist listbox
+        self.playlist_box = tk.Listbox(self.sidebar_frame, width=30, height=15, bg="#2F2F2F", fg="white", font=("Arial", 12), selectmode=tk.SINGLE)
+        self.playlist_box.pack(pady=10)
+        self.playlist_box.bind("<Double-1>", self.on_playlist_click)
+
+        # Spotify Playlist Link Entry
+        self.spotify_label = tk.Label(self.sidebar_frame, text="Spotify Playlist URL:", font=("Arial", 12), bg="#333333", fg="white")
+        self.spotify_label.pack(pady=10)
+        
+        self.spotify_entry = tk.Entry(self.sidebar_frame, font=("Arial", 12), bg="#4C4C4C", fg="white", width=20)
+        self.spotify_entry.pack(pady=5)
+
+        self.spotify_button = tk.Button(self.sidebar_frame, text="Load Spotify Playlist", font=("Arial", 12, "bold"), bg="#5B8CC2", fg="black", command=self.load_spotify_playlist)
+        self.spotify_button.pack(pady=10)
+
+        # Main content frame
+        self.main_frame = tk.Frame(self.root, bg="#2F2F2F", width=600, height=600)
+        self.main_frame.pack(side="right", fill="both", expand=True)
+
+        # Song playing label
+        self.song_label = tk.Label(self.main_frame, text="No song playing", font=("Arial", 14), bg="#2F2F2F", fg="white")
+        self.song_label.pack(pady=10)
+
+        # Album cover frame
+        self.album_cover_frame = tk.Frame(self.main_frame, bg="black", width=300, height=300)
+        self.album_cover_frame.pack(pady=10)
+
+        # Progress Bar with timestamps
+        self.progress_frame = tk.Frame(self.main_frame, bg="#2F2F2F")
+        self.progress_frame.pack(pady=10)
+
+        self.time_label = tk.Label(self.progress_frame, text="00:00 / 00:00", font=("Arial", 10), bg="#2F2F2F", fg="white")
+        self.time_label.grid(row=0, column=0, padx=5)
+
+        self.progress_bar = ttk.Progressbar(self.progress_frame, length=400, mode="determinate")
+        self.progress_bar.grid(row=0, column=1, padx=5)
+
+        # Control buttons (Play, Pause, Next, Previous)
+        self.control_frame = tk.Frame(self.main_frame, bg="#2F2F2F")
+        self.control_frame.pack(pady=20)
+
+        self.play_pause_button = tk.Button(self.control_frame, text="Play", font=("Arial", 20, "bold"), bg="#5B8CC2", fg="black", command=self.toggle_play_pause, relief="raised", width=10, height=3, bd=5)
+        self.play_pause_button.grid(row=0, column=1, padx=40, pady=40)
+
+        self.prev_button = tk.Button(self.control_frame, text="⏪", font=("Arial", 18, "bold"), bg="#5B8CC2", fg="black", command=self.prev_song, relief="raised", width=5, height=2, bd=3)
+        self.prev_button.grid(row=0, column=0, padx=10, pady=40)
+
+        self.next_button = tk.Button(self.control_frame, text="⏩", font=("Arial", 18, "bold"), bg="#5B8CC2", fg="black", command=self.next_song, relief="raised", width=5, height=2, bd=3)
+        self.next_button.grid(row=0, column=2, padx=10, pady=40)
+
+    def import_files(self):
+        """Allow the user to import MP3 files and add them to the playlist"""
+        files = filedialog.askopenfilenames(filetypes=[("MP3 Files", "*.mp3")])  # Ask the user to select MP3 files
+        if files:
+            for file in files:
+                # Add each MP3 file to the playlist
+                self.song_list.append(file)
+                self.playlist_box.insert(tk.END, os.path.basename(file))  # Add the song name to the listbox
+
+    def load_spotify_playlist(self):
+        """Fetch and load the playlist from Spotify"""
+        playlist_url = self.spotify_entry.get()
+        if playlist_url:
+            playlist_id = playlist_url.split("/")[-1].split("?")[0]
+            results = sp.playlist_tracks(playlist_id)
+            self.song_list = [track['track']['uri'] for track in results['items']]  # Track URIs for playing
+            self.update_playlist()
+            self.load_song(self.song_list[0])  # Start with the first track
+        else:
+            messagebox.showerror("Error", "Please enter a valid Spotify playlist URL.")
+
+    def load_song(self, track_uri):
+        """Load and play the song from Spotify"""
+        track = sp.track(track_uri)
+        self.current_song = track['uri']
+        self.song_label.config(text=f"Now Playing: {track['name']}")
+        sp.start_playback(uris=[track_uri])
+        self.is_playing = True
+        self.play_pause_button.config(text="Pause")
+        self.update_progress_bar()
+
+    def update_progress_bar(self):
+        """Update the progress bar while music is playing"""
+        if self.is_playing:
+            current_pos = sp.current_playback()['progress_ms'] / 1000  # in seconds
+            progress = (current_pos / self.song_length) * 100
+            self.progress_bar['value'] = progress
+
+            current_time = self.format_time(current_pos)
+            total_time = self.format_time(self.song_length)
+            self.time_label.config(text=f"{current_time} / {total_time}")
+
+            if current_pos < self.song_length:
+                self.root.after(1000, self.update_progress_bar)
+            else:
+                self.progress_bar['value'] = 100  # End of song
+
+    def format_time(self, seconds):
+        """Format time from seconds to MM:SS format"""
+        minutes = int(seconds // 60)
+        seconds = int(seconds % 60)
+        return f"{minutes:02}:{seconds:02}"
+
+    def update_playlist(self):
+        """Update the playlist (song queue) listbox"""
+        self.playlist_box.delete(0, tk.END)  # Clear current list
+        for song in self.song_list:
+            track = sp.track(song)
+            self.playlist_box.insert(tk.END, track['name'])
+
+    def on_playlist_click(self, event):
+        """Play the song clicked in the playlist"""
+        selected_index = self.playlist_box.curselection()
+        if selected_index:
+            selected_song = self.song_list[selected_index[0]]
+            self.load_song(selected_song)
+
+    def toggle_play_pause(self):
+        """Toggle between play and pause"""
+        if self.is_playing:
+            sp.pause_playback()
+            self.play_pause_button.config(text="Play")
+        else:
+            sp.start_playback(uris=[self.current_song])
+            self.play_pause_button.config(text="Pause")
+        self.is_playing = not self.is_playing
+
+    def stop_music(self):
+        """Stop music playback"""
+        sp.pause_playback()
+        self.is_playing = False
+        self.play_pause_button.config(text="Play")
+        self.progress_bar['value'] = 0
+        self.song_label.config(text="No song playing")
+
+    def next_song(self):
+        """Skip to the next song in the queue"""
+        self.current_index = (self.current_index + 1) % len(self.song_list)
+        self.load_song(self.song_list[self.current_index])
+
+    def prev_song(self):
+        """Go to the previous song in the queue"""
+        self.current_index = (self.current_index - 1) % len(self.song_list)
+        self.load_song(self.song_list[self.current_index])
+
+
+# Create the main window
+root = tk.Tk()
+
+# Create and run the music player
+player = MusicPlayer(root)
+root.mainloop()
