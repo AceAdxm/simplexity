@@ -22,3 +22,9 @@ SIMPLEXITY is a open source new upcoming mp3 player ready to change the game
 - <strong>Endless playback ready to play your songs on loop</strong>
 - <strong>Dark amoled themes making it vision safe (*more themes coming soon*)</strong>
 - <strong>Easy navigation just click and play</strong>
+
+<h1>Extra info</h1>
+
+- <strong> Currently in development making an android api</strong>
+- <strong> in the future may add macos and windows support but for now are used for base development</strong>
+
