@@ -26,5 +26,6 @@ SIMPLEXITY is a open source new upcoming mp3 player ready to change the game
 <h1>Extra info</h1>
 
 - <strong> Currently in development making an android api</strong>
-- <strong> in the future may add macos and windows support but for now are used for base development</strong>
+- <strong> in the future may add macos and windows support but for now a
+both are used for base development</strong>
 
