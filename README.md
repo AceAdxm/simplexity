@@ -12,7 +12,7 @@ SIMPLEXITY is a open source new upcoming mp3 player ready to change the game
 <h1>System requirements</h1>
 
 - <strong>Android OS: 9.0+ (*release coming soon*) </strong>
-- <strong>WIN OS: Windows 7-11 (for source code) </strong>
+- <strong>WIN OS: Windows 7-11 (*release coming soon*) </strong>
 - <strong>MAC OS: macos catalina *10.15+* (for source code)</strong>
 - <strong>Spotify: latest official - used for intergration *coming soon* [(go to versions)](https://loadspot.pages.dev)</strong>
 
@@ -26,6 +26,5 @@ SIMPLEXITY is a open source new upcoming mp3 player ready to change the game
 <h1>Extra info</h1>
 
 - <strong> Currently in development making an android api</strong>
-- <strong> in the future may add macos and windows support but for now 
-both are used for base development</strong>
+- <strong> Currently working on a browser style app (which may be windows compatible)</strong>
 
