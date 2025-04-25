@@ -5,7 +5,7 @@
 
 
  <p align="center">
-   <strong>PROJECT ABANDONED ALL FILES ARE AT https://github.com/AceAdxm/simplexity/tree/all-code-and-config</strong>
+   <strong>ARCHIVE OF ALL FILES ARE AT https://github.com/AceAdxm/simplexity/tree/all-code-and-config</strong>
     
 
 
